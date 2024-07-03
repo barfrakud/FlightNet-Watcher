@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Air Traffic Radar Landing Page</title>
+    <title>FlightNet Watcher</title>
     <style>
         body, html {
             margin: 0;
@@ -25,16 +25,17 @@
             z-index: 1;
         }
         .logo {
-            width: 100px;
+            width: 75px;
             height: auto;
         }
     </style>
+    <link rel="icon" href="logo.png" type="image/png">
 </head>
 <body>
     <canvas id="radar"></canvas>
-    <!-- <div class="logo-container">
-        <img src="your-logo.png" alt="Logo" class="logo">
-    </div> -->
+    <div class="logo-container">
+        <img src="logo.png" alt="Logo" class="logo">
+    </div>
 
     <script>
         const canvas = document.getElementById('radar');
@@ -59,6 +60,10 @@
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
 
+        function closeDistance(x1, y1, x2, y2) {
+                return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+        }
+
         // Aircraft class
         class Aircraft {
             constructor() {
@@ -69,12 +74,26 @@
                 this.icao = this.generateICAO();
                 this.altitude = Math.floor(Math.random() * 150 + 100) * 100; // 10,000 to 25000 feet
                 this.type = this.generateAircraftType();
-                this.avoidanceRadius = 100; // Distance at which aircraft starts avoiding mouse
+                this.avoidanceRadius = 50; // Distance at which aircraft starts avoiding mouse
+                this.collisionRadius = 5; // Same as the circle radius
+                this.isColliding = false;
+                this.collisionTimestamp = null;
             }
 
+            checkCollision(otherAircraft) {
+                const distance = Math.sqrt(
+                    (this.x - otherAircraft.x) ** 2 + (this.y - otherAircraft.y) ** 2
+                );
+                if (distance < (this.collisionRadius + otherAircraft.collisionRadius)) {
+                    if (!this.isColliding) {
+                        this.collisionTimestamp = Date.now();
+                    }
+                    return true;
+                }
+                return false;
+            }
 
             // function that generates numer betweem 0.100 and 0.400
-            
             generateSpeed() {
                 return Math.random() * 0.4 + 0.1;
             }
@@ -97,10 +116,13 @@
                 return commonTypes[Math.floor(Math.random() * commonTypes.length)];
             }
 
+ 
+
             avoid(mouseX, mouseY) {
                 const dx = this.x - mouseX;
                 const dy = this.y - mouseY;
                 const distance = Math.sqrt(dx * dx + dy * dy);
+                
 
                 if (distance < this.avoidanceRadius) {
                     // Calculate angle to mouse
@@ -110,7 +132,9 @@
                     const avoidanceStrength = 0.1; // Adjust this to make avoidance more or less aggressive
                     this.direction = angleToMouse + avoidanceStrength * (Math.PI - distance / this.avoidanceRadius);
                 }
+        
             }
+            
             move() {
                 this.avoid(mouseX, mouseY);
                 
@@ -124,10 +148,13 @@
             }
 
             draw() {
+                if (this.isColliding && Date.now() - this.collisionTimestamp > 5000) {
+                    return; // Don't draw if 5 seconds have passed since collision
+                }
                 // Draw the circle (aircraft body)
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, 5, 0, Math.PI * 2);
-                ctx.strokeStyle = '#00ff00';
+                ctx.strokeStyle = this.isColliding ? '#ff0000' : '#00ff00'; // Set the color to red if colliding
                 ctx.stroke();
 
                 // Calculate vector length based on speed
@@ -173,9 +200,6 @@
             {x: 0.900, y: 0.900},
             {x: 0.100, y: 0.900},
             {x: 0.100, y: 0.100},
-
-
-            // {x: 0.3527734375, y: 0.359765625},
         ];
 
 
@@ -222,23 +246,79 @@
             ctx.stroke();
         }
 
+        // function animate() {
+
+        //     ctx.fillStyle = '#001a2c'; // or any other color you want
+        //     ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        //     // drawEuropeBorders();
+        //     // drawPolandBorders();
+        //     drawRadarCircles();
+
+        //     // Reset collision state for all aircraft
+        //     aircraft.forEach(a => a.isColliding = false);
+
+        //         // Check for collisions
+        //     for (let i = 0; i < aircraft.length; i++) {
+        //         for (let j = i + 1; j < aircraft.length; j++) {
+        //             if (aircraft[i].checkCollision(aircraft[j])) {
+        //                 aircraft[i].isColliding = true;
+        //                 aircraft[j].isColliding = true;
+        //             }
+        //         }
+        //     }
+    
+
+        //     aircraft.forEach(a => {
+        //         a.move();
+        //         a.draw();
+        //     });
+
+        //     requestAnimationFrame(animate);
+        // }
         function animate() {
-            ctx.fillStyle = 'rgba(0, 26, 44, 0.3)';
+            ctx.fillStyle = '#001a2c';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // drawEuropeBorders();
-            drawPolandBorders();
             drawRadarCircles();
 
-            aircraft.forEach(a => {
+            // Check for collisions
+            for (let i = 0; i < aircraft.length; i++) {
+                for (let j = i + 1; j < aircraft.length; j++) {
+                    if (aircraft[i].checkCollision(aircraft[j])) {
+                        aircraft[i].isColliding = true;
+                        aircraft[j].isColliding = true;
+                    }
+                }
+            }
+
+            // Move, draw, and remove aircraft
+            for (let i = aircraft.length - 1; i >= 0; i--) {
+                const a = aircraft[i];
                 a.move();
                 a.draw();
-            });
+
+                // Remove aircraft 5 seconds after collision
+                if (a.isColliding && Date.now() - a.collisionTimestamp > 5000) {
+                    aircraft.splice(i, 1);
+                }
+            }
 
             requestAnimationFrame(animate);
         }
 
         animate();
+
+        function spawnNewAircraft() {
+            if (aircraft.length < 10) {
+                aircraft.push(new Aircraft());
+            }
+            setTimeout(spawnNewAircraft, 1000); // Check every second
+        }
+
+        // Call this function after initializing the aircraft array
+        spawnNewAircraft();
+
     </script>
 </body>
 </html>
