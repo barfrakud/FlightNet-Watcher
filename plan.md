@@ -19,9 +19,9 @@
 - [x] **Inicjalizacja aplikacji**: `src/main.js` jako punkt startowy, który łączy `RadarScene`, `TrafficManager` i konfigurację.
 
 ## Faza 2 – Infrastruktura grywalizacji
-- [ ] **Konfiguracja i stany gry**: `src/game/GameState.js` przechowujące poziom trudności, doświadczenie, limity graczy, scoreboard.
-- [ ] **System punktów i wyników**: `src/game/Scoreboard.js` do liczenia punktów, zapisu `callsign`, zarządzania lokalnym `Top 5`.
-- [ ] **Obsługa limitu graczy**: `src/game/PlayerManager.js` weryfikujący dostępne sloty, w przyszłości integracja sieciowa.
+- [x] **Konfiguracja i stany gry**: `src/game/GameState.js` przechowujące poziom trudności, doświadczenie, limity graczy, scoreboard.
+- [x] **System punktów i wyników**: `src/game/Scoreboard.js` do liczenia punktów, zapisu `callsign`, zarządzania lokalnym `Top 5`.
+- [x] **Obsługa limitu graczy**: `src/game/PlayerManager.js` weryfikujący dostępne sloty, w przyszłości integracja sieciowa.
 
 ## Faza 3 – Interfejs użytkownika
 - [ ] **Warstwa UI**: wydzielenie widoków do `src/ui/`, m.in. `HUD`, panel kontroli, formularz `callsign`.
