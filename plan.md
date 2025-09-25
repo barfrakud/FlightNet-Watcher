@@ -13,10 +13,10 @@
     - `src/ui/` – komponenty interfejsu (`HUD`, panel kontroli, formularze).
 
 ## Faza 1 – Refaktoryzacja do modułów OOP
-- [ ] **Wydzielenie klasy `Aircraft`**: przeniesienie definicji do `src/models/Aircraft.js`, dodanie interfejsu do eksportu/instancjonowania.
-- [ ] **Stworzenie `RadarScene`**: nowa klasa w `src/core/RadarScene.js` zarządzająca płótnem, pętlą animacji, obsługą zdarzeń oraz diagnostyką.
-- [ ] **Moduł zarządzania flotą**: `src/services/TrafficManager.js` odpowiedzialny za generowanie, odświeżanie, spawn i usuwanie samolotów.
-- [ ] **Inicjalizacja aplikacji**: `src/main.js` jako punkt startowy, który łączy `RadarScene`, `TrafficManager` i konfigurację.
+- [x] **Wydzielenie klasy `Aircraft`**: przeniesienie definicji do `src/models/Aircraft.js`, dodanie interfejsu do eksportu/instancjonowania.
+- [x] **Stworzenie `RadarScene`**: nowa klasa w `src/core/RadarScene.js` zarządzająca płótnem, pętlą animacji, obsługą zdarzeń oraz diagnostyką.
+- [x] **Moduł zarządzania flotą**: `src/services/TrafficManager.js` odpowiedzialny za generowanie, odświeżanie, spawn i usuwanie samolotów.
+- [x] **Inicjalizacja aplikacji**: `src/main.js` jako punkt startowy, który łączy `RadarScene`, `TrafficManager` i konfigurację.
 
 ## Faza 2 – Infrastruktura grywalizacji
 - [ ] **Konfiguracja i stany gry**: `src/game/GameState.js` przechowujące poziom trudności, doświadczenie, limity graczy, scoreboard.
