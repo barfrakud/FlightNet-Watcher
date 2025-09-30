@@ -56,6 +56,7 @@ export class RadarScene {
     this.activeRunway = '27';
     this.currentStage = 1;
     this.stageScore = 0;
+    this.gameStarted = false;
     this._generateWind();
 
     this._boundLoop = this._loop.bind(this);
@@ -102,13 +103,7 @@ export class RadarScene {
   }
 
   _generateWind() {
-    this.windDirection = Math.random() * 360;
-    const normalizedWind = ((this.windDirection + 180) % 360);
-    if (normalizedWind < 90 || normalizedWind >= 270) {
-      this.activeRunway = '09';
-    } else {
-      this.activeRunway = '27';
-    }
+    this.activeRunway = Math.random() < 0.5 ? '27' : '09';
     this.trafficManager.setActiveRunway(this.activeRunway);
   }
 
@@ -156,16 +151,18 @@ export class RadarScene {
     }
     this.gameState.setActiveFlights(this.trafficManager.aircraft.length);
 
-    if (this.gameState.metrics.score < 0) {
-      this.running = false;
-      this._showGameOver();
-      return;
-    }
+    if (this.gameStarted) {
+      if (this.gameState.metrics.score < 0) {
+        this.running = false;
+        this._showGameOver();
+        return;
+      }
 
-    if (this.trafficManager.stageComplete && !this.stageComplete?.isVisible) {
-      this.running = false;
-      this._showStageComplete();
-      return;
+      if (this.trafficManager.stageComplete && !this.stageComplete?.isVisible) {
+        this.running = false;
+        this._showStageComplete();
+        return;
+      }
     }
 
     this._drawBackground();
@@ -255,33 +252,18 @@ export class RadarScene {
     ctx.textBaseline = 'middle';
     
     ctx.save();
-    if (this.activeRunway === '27') {
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-      ctx.translate(left + 50, midY);
-      ctx.rotate(Math.PI / 2);
-      ctx.fillText('09', 0, 0);
-      ctx.restore();
-      
-      ctx.save();
-      ctx.fillStyle = 'rgba(0, 255, 0, 0.9)';
-      ctx.translate(left + runwayLength - 50, midY);
-      ctx.rotate(-Math.PI / 2);
-      ctx.fillText('27', 0, 0);
-      ctx.restore();
-    } else {
-      ctx.fillStyle = 'rgba(0, 255, 0, 0.9)';
-      ctx.translate(left + 50, midY);
-      ctx.rotate(Math.PI / 2);
-      ctx.fillText('27', 0, 0);
-      ctx.restore();
-      
-      ctx.save();
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-      ctx.translate(left + runwayLength - 50, midY);
-      ctx.rotate(-Math.PI / 2);
-      ctx.fillText('09', 0, 0);
-      ctx.restore();
-    }
+    ctx.fillStyle = this.activeRunway === '09' ? 'rgba(0, 255, 0, 0.9)' : 'rgba(255, 255, 255, 0.5)';
+    ctx.translate(left + 50, midY);
+    ctx.rotate(Math.PI / 2);
+    ctx.fillText('09', 0, 0);
+    ctx.restore();
+    
+    ctx.save();
+    ctx.fillStyle = this.activeRunway === '27' ? 'rgba(0, 255, 0, 0.9)' : 'rgba(255, 255, 255, 0.5)';
+    ctx.translate(left + runwayLength - 50, midY);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText('27', 0, 0);
+    ctx.restore();
     
     ctx.textAlign = 'left';
     ctx.textBaseline = 'alphabetic';
@@ -384,7 +366,12 @@ export class RadarScene {
     this.currentCallsign = null;
     this.runwayVisible = false;
     this.startTimestamp = null;
-    this.trafficManager.startStage(1);
+    this.gameStarted = false;
+    this.trafficManager.demoMode = true;
+    this.trafficManager.stageAircraftLimit = Infinity;
+    this.trafficManager.aircraftSpawned = 0;
+    this.trafficManager.aircraft = [];
+    this.trafficManager.lastSpawn = null;
     this._generateWind();
     
     if (this.hud) {
@@ -444,6 +431,8 @@ export class RadarScene {
     this.currentCallsign = callsign;
     this.runwayVisible = true;
     this.running = true;
+    this.gameStarted = true;
+    this.gameState.reset();
     this.trafficManager.startStage(1);
     
     if (this.hud) {

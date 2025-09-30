@@ -12,9 +12,10 @@ export class TrafficManager {
     this.gameStartTime = null;
     this.aircraftSpawned = 0;
     this.currentStage = 1;
-    this.stageAircraftLimit = 6;
+    this.stageAircraftLimit = Infinity;
     this.stageComplete = false;
     this.activeRunwayDirection = '27';
+    this.demoMode = true;
   }
 
   initialize(bounds) {
@@ -27,11 +28,12 @@ export class TrafficManager {
 
   startStage(stageNumber) {
     this.currentStage = stageNumber;
-    this.stageAircraftLimit = 5 + stageNumber;
+    this.stageAircraftLimit = 0 + stageNumber;
     this.aircraftSpawned = 0;
     this.aircraft = [];
     this.stageComplete = false;
     this.lastSpawn = null;
+    this.demoMode = false;
   }
 
   setActiveRunway(direction) {
@@ -50,14 +52,26 @@ export class TrafficManager {
     this.runway = runway ?? null;
     this.runwayActive = Boolean(runway);
 
-    if (this.aircraftSpawned < this.stageAircraftLimit) {
-      if (this.lastSpawn === null) {
-        this.lastSpawn = timestamp;
-      } else if (timestamp - this.lastSpawn >= this.spawnInterval) {
-        const newAircraft = this._createAircraft();
-        this.aircraft.push(newAircraft);
-        this.lastSpawn = timestamp;
-        this.aircraftSpawned += 1;
+    if (this.demoMode) {
+      const targetAircraft = 10;
+      if (this.aircraft.length < targetAircraft) {
+        if (this.lastSpawn === null || timestamp - this.lastSpawn >= 2000) {
+          const newAircraft = this._createAircraft();
+          this.aircraft.push(newAircraft);
+          this.lastSpawn = timestamp;
+        }
+      }
+    } else {
+      const canSpawn = this.aircraftSpawned < this.stageAircraftLimit;
+      if (canSpawn) {
+        if (this.lastSpawn === null) {
+          this.lastSpawn = timestamp;
+        } else if (timestamp - this.lastSpawn >= this.spawnInterval) {
+          const newAircraft = this._createAircraft();
+          this.aircraft.push(newAircraft);
+          this.lastSpawn = timestamp;
+          this.aircraftSpawned += 1;
+        }
       }
     }
 
@@ -71,7 +85,7 @@ export class TrafficManager {
 
     for (let i = this.aircraft.length - 1; i >= 0; i -= 1) {
       const current = this.aircraft[i];
-      current.update(mousePosition, this.bounds);
+      current.update(mousePosition, this.bounds, this.activeRunwayDirection, this.runway);
       current.isColliding = false;
 
       if (current.missed && !current.wasCountedAsMissed) {
@@ -87,7 +101,12 @@ export class TrafficManager {
           current.markLanded(timestamp, this.activeRunwayDirection, runwayStartX);
           landedCount += 1;
           const score = current.calculateLandingScore(this.bounds);
-          console.log(`Aircraft landed: direction=${(current.direction * 180 / Math.PI).toFixed(1)}°, activeRunway=${this.activeRunwayDirection}, correctRunway=${current.landedOnCorrectRunway}, distance=${current.distanceTraveled.toFixed(0)}, score=${score}`);
+          const headingMath = (current.direction * 180 / Math.PI + 360) % 360;
+          const heading = (headingMath + 90) % 360;
+          const idealHeading = this.activeRunwayDirection === '27' ? 270 : 90;
+          let deviation = Math.abs(heading - idealHeading);
+          if (deviation > 180) deviation = 360 - deviation;
+          console.log(`Aircraft landed: heading=${heading.toFixed(1)}° (compass), ideal=${idealHeading}°, deviation=${deviation.toFixed(1)}°, activeRunway=${this.activeRunwayDirection}, correctRunway=${current.landedOnCorrectRunway}, crossedThreshold=${current.crossedThreshold}, distance=${current.distanceTraveled.toFixed(0)}, score=${score}`);
           totalScore += score;
         }
       }
@@ -115,24 +134,24 @@ export class TrafficManager {
   }
 
   _createAircraft() {
-    if (!this.runway) {
-      return new Aircraft(this.bounds);
-    }
-
     const width = this.bounds.width;
     const height = this.bounds.height;
     const side = Math.floor(Math.random() * 4);
     let x, y, direction;
 
-    const runwayLength = this.runway.halfLength * 2;
     let targetX, targetY;
     
-    if (this.activeRunwayDirection === '27') {
-      targetX = this.runway.centerX + this.runway.halfLength;
-      targetY = this.runway.centerY;
+    if (this.runway) {
+      if (this.activeRunwayDirection === '27') {
+        targetX = this.runway.centerX + this.runway.halfLength;
+        targetY = this.runway.centerY;
+      } else {
+        targetX = this.runway.centerX - this.runway.halfLength;
+        targetY = this.runway.centerY;
+      }
     } else {
-      targetX = this.runway.centerX - this.runway.halfLength;
-      targetY = this.runway.centerY;
+      targetX = width / 2;
+      targetY = height / 2;
     }
 
     switch(side) {

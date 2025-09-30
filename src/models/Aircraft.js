@@ -25,9 +25,10 @@ export class Aircraft {
     this.previousY = this.y;
     this.missed = false;
     this.wasCountedAsMissed = false;
+    this.crossedThreshold = false;
   }
 
-  update(mousePosition, bounds) {
+  update(mousePosition, bounds, activeRunway, runway) {
     if (this.landed) {
       return;
     }
@@ -43,6 +44,10 @@ export class Aircraft {
       const dx = this.x - oldX;
       const dy = this.y - oldY;
       this.distanceTraveled += Math.hypot(dx, dy);
+      
+      if (!this.crossedThreshold && runway) {
+        this.#checkThresholdCrossing(oldX, oldY, this.x, this.y, runway, activeRunway);
+      }
       
       if (this.#isOutOfBounds()) {
         this.missed = true;
@@ -106,10 +111,19 @@ export class Aircraft {
     ctx.lineWidth = 1;
     ctx.fillStyle = '#00ff00';
     ctx.font = '12px Courier New';
-    ctx.fillText(`${this.icao}`, this.x + 10, this.y - 20);
-    ctx.fillText(`${this.type}`, this.x + 10, this.y - 10);
-    ctx.fillText(`SPD: ${Math.floor(this.speed * 1000)} kts`, this.x + 10, this.y);
-    ctx.fillText(`ALT: ${this.altitude} ft`, this.x + 10, this.y + 10);
+    const headingMath = (this.direction * 180 / Math.PI + 360) % 360;
+    const heading = Math.round((headingMath + 90) % 360);
+    ctx.fillText(`${this.icao}`, this.x + 10, this.y - 30);
+    ctx.fillText(`${this.type}`, this.x + 10, this.y - 20);
+    ctx.fillText(`SPD: ${Math.floor(this.speed * 1000)} kts`, this.x + 10, this.y - 10);
+    ctx.fillText(`ALT: ${this.altitude} ft`, this.x + 10, this.y);
+    
+    if (window.DEBUG_MODE) {
+      ctx.fillStyle = '#ffff00';
+      ctx.fillText(`HDG: ${heading}°`, this.x + 10, this.y + 10);
+      ctx.fillText(`DIR: ${this.direction.toFixed(2)} rad (${headingMath.toFixed(1)}°)`, this.x + 10, this.y + 20);
+      ctx.fillText(`X: ${Math.round(this.x)}, Y: ${Math.round(this.y)}`, this.x + 10, this.y + 30);
+    }
   }
 
   isWithinRunway(runway) {
@@ -130,21 +144,53 @@ export class Aircraft {
   }
 
   _checkRunwayDirection(activeRunway) {
-    const heading = (this.direction * 180 / Math.PI + 360) % 360;
+    const headingMath = (this.direction * 180 / Math.PI + 360) % 360;
+    const heading = (headingMath + 90) % 360;
+    let idealHeading;
+    
     if (activeRunway === '27') {
-      return (heading >= 180 && heading <= 360) || heading === 0;
+      idealHeading = 270;
     } else if (activeRunway === '09') {
-      return heading >= 0 && heading <= 180;
+      idealHeading = 90;
+    } else {
+      return false;
     }
-    return false;
+    
+    let deviation = Math.abs(heading - idealHeading);
+    if (deviation > 180) {
+      deviation = 360 - deviation;
+    }
+    
+    return deviation <= 45;
   }
 
   calculateLandingScore(bounds) {
-    if (!this.landedOnCorrectRunway) {
+    if (!this.landedOnCorrectRunway || !this.crossedThreshold) {
       return 0;
     }
     
-    const baseScore = 10;
+    const headingMath = (this.direction * 180 / Math.PI + 360) % 360;
+    const heading = (headingMath + 90) % 360;
+    const idealHeading = this.landedOnCorrectRunway ? 
+      (heading >= 135 && heading <= 315 ? 270 : 90) : 270;
+    
+    let deviation = Math.abs(heading - idealHeading);
+    if (deviation > 180) {
+      deviation = 360 - deviation;
+    }
+    
+    let headingMultiplier = 1;
+    if (deviation <= 10) {
+      headingMultiplier = 3;
+    } else if (deviation <= 20) {
+      headingMultiplier = 2;
+    } else if (deviation <= 45) {
+      headingMultiplier = 1;
+    } else {
+      return 0;
+    }
+    
+    const baseScore = 10 * headingMultiplier;
     const minDistance = Math.min(bounds.width, bounds.height) * 0.3;
     const maxDistance = Math.min(bounds.width, bounds.height) * 2;
     
@@ -175,6 +221,32 @@ export class Aircraft {
     const { width, height } = this.bounds;
     return this.x < -margin || this.x > width + margin || 
            this.y < -margin || this.y > height + margin;
+  }
+
+  #checkThresholdCrossing(oldX, oldY, newX, newY, runway, activeRunway) {
+    if (!runway) return;
+
+    const runwayTop = runway.centerY - runway.halfWidth;
+    const runwayBottom = runway.centerY + runway.halfWidth;
+    
+    if (newY < runwayTop || newY > runwayBottom) {
+      return;
+    }
+
+    let thresholdX;
+    if (activeRunway === '27') {
+      thresholdX = runway.centerX + runway.halfLength;
+      if (oldX > thresholdX && newX <= thresholdX) {
+        this.crossedThreshold = true;
+        console.log(`[${this.icao}] Crossed RWY 27 threshold! oldX=${oldX.toFixed(0)}, newX=${newX.toFixed(0)}, threshold=${thresholdX.toFixed(0)}`);
+      }
+    } else {
+      thresholdX = runway.centerX - runway.halfLength;
+      if (oldX < thresholdX && newX >= thresholdX) {
+        this.crossedThreshold = true;
+        console.log(`[${this.icao}] Crossed RWY 09 threshold! oldX=${oldX.toFixed(0)}, newX=${newX.toFixed(0)}, threshold=${thresholdX.toFixed(0)}`);
+      }
+    }
   }
 
   #generateSpeed() {
