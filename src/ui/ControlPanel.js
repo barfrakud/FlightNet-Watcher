@@ -5,6 +5,7 @@ export class ControlPanel {
     this.root = root;
     this.element = document.createElement('div');
     this.element.className = 'control-panel';
+    this.element.style.display = 'none';
     this.root.appendChild(this.element);
 
     this.statusSection = document.createElement('div');
@@ -80,5 +81,13 @@ export class ControlPanel {
       item.textContent = `${callsign} — ${score}`;
       this.scoreList.appendChild(item);
     });
+  }
+
+  show() {
+    this.element.style.display = '';
+  }
+
+  hide() {
+    this.element.style.display = 'none';
   }
 }

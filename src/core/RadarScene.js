@@ -7,6 +7,7 @@ import { ControlPanel } from '../ui/ControlPanel.js';
 import { CallsignForm } from '../ui/CallsignForm.js';
 import { StageComplete } from '../ui/StageComplete.js';
 import { GameOver } from '../ui/GameOver.js';
+import { FinalScore } from '../ui/FinalScore.js';
 
 const DEFAULT_BACKGROUND = '#001a2c';
 
@@ -46,7 +47,9 @@ export class RadarScene {
     this.callsignForm = null;
     this.stageComplete = null;
     this.gameOver = null;
+    this.finalScore = null;
     this.currentPlayerId = null;
+    this.currentCallsign = null;
     this.runway = null;
     this.runwayVisible = false;
     this.windDirection = 0;
@@ -209,7 +212,7 @@ export class RadarScene {
     const halfWidth = Math.min(width, height) * 0.02;
     this.runway = {
       centerX: width / 2,
-      centerY: height * 0.66,
+      centerY: height / 2,
       halfLength,
       halfWidth,
     };
@@ -287,8 +290,12 @@ export class RadarScene {
     });
     this.stageComplete = new StageComplete(this.uiRoot, {
       onNextStage: this._handleNextStage,
+      onEndGame: this._handleEndGame.bind(this),
     });
     this.gameOver = new GameOver(this.uiRoot, {
+      onRestart: this._handleRestart,
+    });
+    this.finalScore = new FinalScore(this.uiRoot, {
       onRestart: this._handleRestart,
     });
   }
@@ -304,6 +311,8 @@ export class RadarScene {
     this.stageComplete = null;
     this.gameOver?.destroy();
     this.gameOver = null;
+    this.finalScore?.destroy();
+    this.finalScore = null;
   }
 
   _showStageComplete() {
@@ -331,16 +340,45 @@ export class RadarScene {
     }
   }
 
+  _handleEndGame() {
+    if (this.currentCallsign && this.gameState.metrics.score > 0) {
+      this.scoreboard.addScore({
+        callsign: this.currentCallsign,
+        score: this.gameState.metrics.score,
+      });
+    }
+
+    if (this.finalScore) {
+      this.finalScore.show({
+        callsign: this.currentCallsign || 'Unknown',
+        score: this.gameState.metrics.score,
+        stage: this.currentStage,
+        topScores: this.scoreboard.getTopScores(),
+      });
+    }
+  }
+
   _handleRestart() {
     this.currentStage = 1;
     this.stageScore = 0;
     this.gameState.metrics.score = 0;
     this.gameState.metrics.flightsHandled = 0;
+    this.currentPlayerId = null;
+    this.currentCallsign = null;
+    this.runwayVisible = false;
     this.startTimestamp = null;
     this.trafficManager.startStage(1);
     this._generateWind();
-    this.running = true;
-    this.frameRequest = requestAnimationFrame(this._boundLoop);
+    
+    if (this.hud) {
+      this.hud.hide();
+    }
+    if (this.controlPanel) {
+      this.controlPanel.hide();
+    }
+    if (this.callsignForm) {
+      this.callsignForm.setVisible(true);
+    }
   }
 
   _updateUi(timestamp) {
@@ -389,8 +427,19 @@ export class RadarScene {
       return;
     }
     this.currentPlayerId = player.id;
+    this.currentCallsign = callsign;
     this.runwayVisible = true;
+    this.running = true;
     this.trafficManager.startStage(1);
+    
+    if (this.hud) {
+      this.hud.show();
+    }
+    if (this.controlPanel) {
+      this.controlPanel.show();
+    }
+    
+    this.frameRequest = requestAnimationFrame(this._boundLoop);
   }
 
   _generatePlayerId() {

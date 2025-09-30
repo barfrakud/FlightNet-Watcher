@@ -1,8 +1,9 @@
 export class HUD {
-  constructor(root) {
-    this.root = root;
+  constructor(root, options = {}) {
     this.element = document.createElement('div');
     this.element.className = 'hud';
+    this.element.style.display = 'none';
+    this.root = root;
     this.root.appendChild(this.element);
 
     this.scoreElement = document.createElement('div');
@@ -48,6 +49,14 @@ export class HUD {
 
   reset() {
     this.update({ score: 0, stage: 1, elapsedMs: 0, activeRunway: '--' });
+  }
+
+  show() {
+    this.element.style.display = '';
+  }
+
+  hide() {
+    this.element.style.display = 'none';
   }
 
   destroy() {

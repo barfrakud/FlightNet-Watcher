@@ -170,21 +170,34 @@
             font-weight: bold;
             font-size: 24px;
         }
+        .stage-complete__buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            margin-top: 16px;
+        }
         .stage-complete__button {
             background: rgba(0, 255, 0, 0.2);
             border: 2px solid rgba(0, 255, 0, 0.6);
             color: #e0f6ff;
             text-transform: uppercase;
             letter-spacing: 0.1em;
-            padding: 12px 32px;
-            font-size: 18px;
+            padding: 12px 24px;
+            font-size: 16px;
             cursor: pointer;
             font-family: 'Courier New', monospace;
-            margin-top: 16px;
         }
         .stage-complete__button:hover {
             background: rgba(0, 255, 0, 0.4);
             border-color: #00ff00;
+        }
+        .stage-complete__button--end {
+            background: rgba(255, 165, 0, 0.2);
+            border-color: rgba(255, 165, 0, 0.6);
+        }
+        .stage-complete__button--end:hover {
+            background: rgba(255, 165, 0, 0.4);
+            border-color: #ffa500;
         }
         .game-over {
             position: absolute;
@@ -243,6 +256,112 @@
         .game-over__button:hover {
             background: rgba(255, 0, 0, 0.4);
             border-color: #ff0000;
+        }
+        .final-score {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.9);
+            pointer-events: auto;
+            z-index: 1000;
+        }
+        .final-score__content {
+            background: rgba(0, 26, 44, 0.95);
+            border: 2px solid rgba(0, 255, 0, 0.6);
+            border-radius: 12px;
+            padding: 40px 60px;
+            text-align: center;
+            max-width: 500px;
+        }
+        .final-score__title {
+            font-size: 32px;
+            margin: 0 0 24px;
+            color: #00ff00;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+        .final-score__player {
+            margin: 24px 0;
+            padding: 20px;
+            background: rgba(0, 255, 0, 0.1);
+            border: 1px solid rgba(0, 255, 0, 0.3);
+            border-radius: 8px;
+        }
+        .final-score__player-callsign {
+            font-size: 24px;
+            font-weight: bold;
+            color: #00ff00;
+            margin: 0 0 8px;
+        }
+        .final-score__player-score {
+            font-size: 32px;
+            font-weight: bold;
+            color: #00ff00;
+            margin: 0 0 8px;
+        }
+        .final-score__player-stage {
+            font-size: 14px;
+            color: #e0f6ff;
+            margin: 0;
+        }
+        .final-score__leaderboard {
+            margin: 24px 0;
+        }
+        .final-score__leaderboard-title {
+            font-size: 18px;
+            margin: 0 0 16px;
+            color: #e0f6ff;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+        .final-score__list {
+            text-align: left;
+        }
+        .final-score__entry {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 16px;
+            margin: 4px 0;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+            color: #e0f6ff;
+        }
+        .final-score__entry--highlight {
+            background: rgba(0, 255, 0, 0.2);
+            border: 1px solid rgba(0, 255, 0, 0.4);
+            color: #00ff00;
+        }
+        .final-score__rank {
+            font-weight: bold;
+            width: 30px;
+        }
+        .final-score__callsign {
+            flex: 1;
+        }
+        .final-score__points {
+            font-weight: bold;
+        }
+        .final-score__empty {
+            color: #666;
+            font-style: italic;
+        }
+        .final-score__button {
+            background: rgba(0, 255, 0, 0.2);
+            border: 2px solid rgba(0, 255, 0, 0.6);
+            color: #e0f6ff;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            padding: 12px 32px;
+            font-size: 18px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            margin-top: 16px;
+        }
+        .final-score__button:hover {
+            background: rgba(0, 255, 0, 0.4);
+            border-color: #00ff00;
         }
     </style>
     <link rel="icon" href="logo.png" type="image/png">

@@ -2,6 +2,7 @@ export class StageComplete {
   constructor(root, options = {}) {
     this.root = root;
     this.onNextStage = options.onNextStage || (() => {});
+    this.onEndGame = options.onEndGame || (() => {});
     this.element = null;
     this.isVisible = false;
   }
@@ -18,14 +19,23 @@ export class StageComplete {
           <p class="stage-complete__stat">Stage Score: <span class="stage-complete__value">${score}</span></p>
           <p class="stage-complete__stat">Total Score: <span class="stage-complete__value">${totalScore}</span></p>
         </div>
-        <button class="stage-complete__button">Next Stage</button>
+        <div class="stage-complete__buttons">
+          <button class="stage-complete__button stage-complete__button--next">Next Stage</button>
+          <button class="stage-complete__button stage-complete__button--end">End Game</button>
+        </div>
       </div>
     `;
 
-    const button = this.element.querySelector('.stage-complete__button');
-    button.addEventListener('click', () => {
+    const nextButton = this.element.querySelector('.stage-complete__button--next');
+    nextButton.addEventListener('click', () => {
       this.hide();
       this.onNextStage();
+    });
+
+    const endButton = this.element.querySelector('.stage-complete__button--end');
+    endButton.addEventListener('click', () => {
+      this.hide();
+      this.onEndGame();
     });
 
     this.root.appendChild(this.element);
