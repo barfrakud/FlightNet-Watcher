@@ -124,8 +124,16 @@ export class TrafficManager {
     const side = Math.floor(Math.random() * 4);
     let x, y, direction;
 
-    const targetX = this.runway.centerX;
-    const targetY = this.runway.centerY;
+    const runwayLength = this.runway.halfLength * 2;
+    let targetX, targetY;
+    
+    if (this.activeRunwayDirection === '27') {
+      targetX = this.runway.centerX + this.runway.halfLength;
+      targetY = this.runway.centerY;
+    } else {
+      targetX = this.runway.centerX - this.runway.halfLength;
+      targetY = this.runway.centerY;
+    }
 
     switch(side) {
       case 0:

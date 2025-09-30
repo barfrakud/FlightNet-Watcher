@@ -105,9 +105,9 @@ export class RadarScene {
     this.windDirection = Math.random() * 360;
     const normalizedWind = ((this.windDirection + 180) % 360);
     if (normalizedWind < 90 || normalizedWind >= 270) {
-      this.activeRunway = '27';
-    } else {
       this.activeRunway = '09';
+    } else {
+      this.activeRunway = '27';
     }
     this.trafficManager.setActiveRunway(this.activeRunway);
   }
@@ -250,30 +250,33 @@ export class RadarScene {
     ctx.stroke();
     ctx.setLineDash([]);
 
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
     ctx.font = 'bold 32px Courier New';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     
     ctx.save();
     if (this.activeRunway === '27') {
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
       ctx.translate(left + 50, midY);
       ctx.rotate(Math.PI / 2);
       ctx.fillText('09', 0, 0);
       ctx.restore();
       
       ctx.save();
+      ctx.fillStyle = 'rgba(0, 255, 0, 0.9)';
       ctx.translate(left + runwayLength - 50, midY);
       ctx.rotate(-Math.PI / 2);
       ctx.fillText('27', 0, 0);
       ctx.restore();
     } else {
+      ctx.fillStyle = 'rgba(0, 255, 0, 0.9)';
       ctx.translate(left + 50, midY);
       ctx.rotate(Math.PI / 2);
       ctx.fillText('27', 0, 0);
       ctx.restore();
       
       ctx.save();
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
       ctx.translate(left + runwayLength - 50, midY);
       ctx.rotate(-Math.PI / 2);
       ctx.fillText('09', 0, 0);
