@@ -24,8 +24,10 @@
 - [x] **Obsługa limitu graczy**: `src/game/PlayerManager.js` weryfikujący dostępne sloty, w przyszłości integracja sieciowa.
 
 ## Faza 3 – Interfejs użytkownika
-- [ ] **Warstwa UI**: wydzielenie widoków do `src/ui/`, m.in. `HUD`, panel kontroli, formularz `callsign`.
-- [ ] **Integracja z DOM**: dostosowanie `index.html` do ładowania zbudowanego bundle’a (np. Vite/Webpack) i ładowanie zasobów UI.
+- [x] **Warstwa UI**: wydzielenie widoków do `src/ui/`, m.in. `HUD`, panel kontroli, formularz `callsign`.
+- [x] **Integracja z DOM**: dostosowanie `index.html` do ładowania zbudowanego bundle’a (np. Vite/Webpack) i ładowanie zasobów UI.
+- [x] **Schemat lotniska i pas startowy**: dodanie wizualizacji pasa w `RadarScene`, ukrywanie do startu gry.
+- [x] **Podstawowy scenariusz podejścia**: `TrafficManager` i `Aircraft` wspierają naprowadzanie na pas (Level 1) z dostosowanym spawningiem i zwalnianiem.
 
 ## Faza 4 – Mechaniki progresji i trudności
 - [ ] **Poziomy trudności**: moduł `src/game/DifficultyManager.js` kontrolujący liczbę samolotów, typy zdarzeń, scenariusze.

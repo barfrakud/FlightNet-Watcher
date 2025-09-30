@@ -3,27 +3,58 @@ const AVOIDANCE_RADIUS = 50;
 const COLLISION_RADIUS = 5;
 
 export class Aircraft {
-  constructor(bounds) {
+  constructor(bounds, initialState = {}) {
     this.bounds = { ...bounds };
-    this.x = Math.random() * this.bounds.width;
-    this.y = Math.random() * this.bounds.height;
-    this.speed = this.#generateSpeed();
-    this.direction = Math.random() * Math.PI * 2;
-    this.icao = this.#generateICAO();
-    this.altitude = Math.floor(Math.random() * 150 + 100) * 100;
-    this.type = this.#generateAircraftType();
+    this.x = initialState.x ?? Math.random() * this.bounds.width;
+    this.y = initialState.y ?? Math.random() * this.bounds.height;
+    this.speed = initialState.speed ?? this.#generateSpeed();
+    this.direction = initialState.direction ?? Math.random() * Math.PI * 2;
+    this.icao = initialState.icao ?? this.#generateICAO();
+    this.altitude = initialState.altitude ?? Math.floor(Math.random() * 150 + 100) * 100;
+    this.type = initialState.type ?? this.#generateAircraftType();
     this.avoidanceRadius = AVOIDANCE_RADIUS;
     this.collisionRadius = COLLISION_RADIUS;
     this.isColliding = false;
     this.collisionTimestamp = null;
+    this.landed = false;
+    this.landedTimestamp = null;
+    this.touchedDown = false;
+    this.approachTarget = initialState.approachTarget ?? null;
+    this.distanceTraveled = 0;
+    this.previousX = this.x;
+    this.previousY = this.y;
+    this.missed = false;
+    this.wasCountedAsMissed = false;
   }
 
   update(mousePosition, bounds) {
+    if (this.landed) {
+      return;
+    }
     this.bounds = { ...bounds };
-    this.#avoid(mousePosition);
-    this.x += Math.cos(this.direction) * this.speed;
-    this.y += Math.sin(this.direction) * this.speed;
-    this.#wrapWithinBounds();
+    
+    if (!this.touchedDown) {
+      this.#avoid(mousePosition);
+      const oldX = this.x;
+      const oldY = this.y;
+      this.x += Math.cos(this.direction) * this.speed;
+      this.y += Math.sin(this.direction) * this.speed;
+      
+      const dx = this.x - oldX;
+      const dy = this.y - oldY;
+      this.distanceTraveled += Math.hypot(dx, dy);
+      
+      if (this.#isOutOfBounds()) {
+        this.missed = true;
+      }
+    } else {
+      this.speed = Math.max(this.speed * 0.95, 0);
+      this.x += Math.cos(this.direction) * this.speed;
+      this.y += Math.sin(this.direction) * this.speed;
+      if (this.speed < 0.01) {
+        this.landed = true;
+      }
+    }
   }
 
   checkCollision(otherAircraft) {
@@ -41,6 +72,9 @@ export class Aircraft {
   }
 
   shouldRemove(timestamp) {
+    if (this.landed || this.missed) {
+      return true;
+    }
     if (!this.isColliding || this.collisionTimestamp == null) {
       return false;
     }
@@ -48,6 +82,11 @@ export class Aircraft {
   }
 
   draw(ctx) {
+    if (this.landed) {
+      return;
+    }
+
+    ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.collisionRadius, 0, Math.PI * 2);
     ctx.strokeStyle = this.isColliding ? '#ff0000' : '#00ff00';
@@ -63,8 +102,8 @@ export class Aircraft {
     ctx.strokeStyle = '#00ff00';
     ctx.lineWidth = 2;
     ctx.stroke();
-    ctx.lineWidth = 1;
 
+    ctx.lineWidth = 1;
     ctx.fillStyle = '#00ff00';
     ctx.font = '12px Courier New';
     ctx.fillText(`${this.icao}`, this.x + 10, this.y - 20);
@@ -72,6 +111,49 @@ export class Aircraft {
     ctx.fillText(`SPD: ${Math.floor(this.speed * 1000)} kts`, this.x + 10, this.y);
     ctx.fillText(`ALT: ${this.altitude} ft`, this.x + 10, this.y + 10);
   }
+
+  isWithinRunway(runway) {
+    if (!runway) {
+      return false;
+    }
+    const withinX = Math.abs(this.x - runway.centerX) <= runway.halfLength;
+    const withinY = Math.abs(this.y - runway.centerY) <= runway.halfWidth;
+    return withinX && withinY;
+  }
+
+  markLanded(timestamp, activeRunwayDirection, runwayStartX) {
+    this.touchedDown = true;
+    this.landedTimestamp = timestamp ?? Date.now();
+    this.altitude = 0;
+    this.landedOnCorrectRunway = this._checkRunwayDirection(activeRunwayDirection);
+    this.runwayStartX = runwayStartX;
+  }
+
+  _checkRunwayDirection(activeRunway) {
+    const heading = (this.direction * 180 / Math.PI + 360) % 360;
+    if (activeRunway === '27') {
+      return (heading >= 180 && heading <= 360) || heading === 0;
+    } else if (activeRunway === '09') {
+      return heading >= 0 && heading <= 180;
+    }
+    return false;
+  }
+
+  calculateLandingScore(bounds) {
+    if (!this.landedOnCorrectRunway) {
+      return 0;
+    }
+    
+    const baseScore = 10;
+    const minDistance = Math.min(bounds.width, bounds.height) * 0.3;
+    const maxDistance = Math.min(bounds.width, bounds.height) * 2;
+    
+    const normalizedDistance = Math.max(0, Math.min(1, (this.distanceTraveled - minDistance) / (maxDistance - minDistance)));
+    const distanceBonus = Math.round(10 * (1 - normalizedDistance));
+    
+    return baseScore + distanceBonus;
+  }
+
 
   #avoid(mousePosition) {
     if (!mousePosition) {
@@ -88,12 +170,11 @@ export class Aircraft {
     }
   }
 
-  #wrapWithinBounds() {
+  #isOutOfBounds() {
+    const margin = 100;
     const { width, height } = this.bounds;
-    if (this.x < 0) this.x = width;
-    if (this.x > width) this.x = 0;
-    if (this.y < 0) this.y = height;
-    if (this.y > height) this.y = 0;
+    return this.x < -margin || this.x > width + margin || 
+           this.y < -margin || this.y > height + margin;
   }
 
   #generateSpeed() {
