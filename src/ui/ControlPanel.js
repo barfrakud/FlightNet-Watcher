@@ -8,50 +8,18 @@ export class ControlPanel {
     this.element.style.display = 'none';
     this.root.appendChild(this.element);
 
-    this.statusSection = document.createElement('div');
-    this.statusSection.className = 'control-panel__section control-panel__section--status';
-
-    this.difficultyLabel = document.createElement('p');
-    this.difficultyLabel.className = 'control-panel__text';
-    this.playersLabel = document.createElement('p');
-    this.playersLabel.className = 'control-panel__text';
-    this.flightsLabel = document.createElement('p');
-    this.flightsLabel.className = 'control-panel__text';
-
-    this.statusSection.appendChild(this.difficultyLabel);
-    this.statusSection.appendChild(this.playersLabel);
-    this.statusSection.appendChild(this.flightsLabel);
-
-    this.scoreboardSection = document.createElement('div');
-    this.scoreboardSection.className = 'control-panel__section control-panel__section--scoreboard';
-
     const scoreboardTitle = document.createElement('h3');
-    scoreboardTitle.className = 'control-panel__heading';
-    scoreboardTitle.textContent = 'Top 5';
+    scoreboardTitle.className = 'control-panel__title';
+    scoreboardTitle.textContent = 'Best Scores';
 
-    this.scoreList = document.createElement('ol');
+    this.scoreList = document.createElement('ul');
     this.scoreList.className = 'control-panel__list';
-    this.scoreList.setAttribute('start', '1');
 
-    this.scoreboardSection.appendChild(scoreboardTitle);
-    this.scoreboardSection.appendChild(this.scoreList);
-
-    this.element.appendChild(this.statusSection);
-    this.element.appendChild(this.scoreboardSection);
-
-    this.update({});
+    this.element.appendChild(scoreboardTitle);
+    this.element.appendChild(this.scoreList);
   }
 
-  update({ difficulty, playerSlots, activeFlights, topScores }) {
-    const difficultyLabel = difficulty ? difficulty : 'unknown';
-    const usedSlots = playerSlots?.used ?? 0;
-    const maxSlots = playerSlots?.max ?? 1;
-    const flights = Number.isFinite(activeFlights) ? activeFlights : 0;
-
-    this.difficultyLabel.textContent = `Difficulty: ${difficultyLabel}`;
-    this.playersLabel.textContent = `Players: ${usedSlots} / ${maxSlots}`;
-    this.flightsLabel.textContent = `Active flights: ${flights}`;
-
+  update({ topScores }) {
     this.#renderScores(topScores);
   }
 

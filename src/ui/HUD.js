@@ -6,19 +6,24 @@ export class HUD {
     this.root = root;
     this.root.appendChild(this.element);
 
-    this.scoreElement = document.createElement('div');
-    this.scoreElement.className = 'hud__score';
-    this.stageElement = document.createElement('div');
-    this.stageElement.className = 'hud__stage';
-    this.timerElement = document.createElement('div');
-    this.timerElement.className = 'hud__timer';
-    this.runwayElement = document.createElement('div');
-    this.runwayElement.className = 'hud__runway';
-    this.aircraftElement = document.createElement('div');
-    this.aircraftElement.className = 'hud__aircraft';
+    const title = document.createElement('h3');
+    title.className = 'hud__title';
+    title.textContent = 'Game Info';
 
-    this.element.appendChild(this.scoreElement);
+    this.stageElement = document.createElement('div');
+    this.stageElement.className = 'hud__item';
+    this.scoreElement = document.createElement('div');
+    this.scoreElement.className = 'hud__item';
+    this.timerElement = document.createElement('div');
+    this.timerElement.className = 'hud__item';
+    this.runwayElement = document.createElement('div');
+    this.runwayElement.className = 'hud__item';
+    this.aircraftElement = document.createElement('div');
+    this.aircraftElement.className = 'hud__item';
+
+    this.element.appendChild(title);
     this.element.appendChild(this.stageElement);
+    this.element.appendChild(this.scoreElement);
     this.element.appendChild(this.timerElement);
     this.element.appendChild(this.runwayElement);
     this.element.appendChild(this.aircraftElement);
@@ -26,24 +31,24 @@ export class HUD {
     this.reset();
   }
 
-  update({ score, stage, elapsedMs, activeRunway, aircraftSpawned, aircraftTotal }) {
-    if (Number.isFinite(score)) {
-      this.scoreElement.textContent = `Score: ${score}`;
-    }
+  update({ score, stage, elapsedMs, activeRunway, aircraftAirborne, aircraftLanded }) {
     if (stage) {
-      this.stageElement.textContent = `Stage: ${stage}`;
+      this.stageElement.textContent = `STAGE: ${stage}`;
+    }
+    if (Number.isFinite(score)) {
+      this.scoreElement.textContent = `SCORE: ${score}`;
     }
     if (Number.isFinite(elapsedMs)) {
       const totalSeconds = Math.floor(elapsedMs / 1000);
       const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
       const seconds = (totalSeconds % 60).toString().padStart(2, '0');
-      this.timerElement.textContent = `Time: ${minutes}:${seconds}`;
+      this.timerElement.textContent = `TIME: ${minutes}:${seconds}`;
     }
     if (activeRunway) {
-      this.runwayElement.textContent = `Active RWY: ${activeRunway}`;
+      this.runwayElement.textContent = `ACTIVE RWY: ${activeRunway}`;
     }
-    if (Number.isFinite(aircraftSpawned) && Number.isFinite(aircraftTotal)) {
-      this.aircraftElement.textContent = `Aircraft: ${aircraftSpawned}/${aircraftTotal}`;
+    if (Number.isFinite(aircraftAirborne) && Number.isFinite(aircraftLanded)) {
+      this.aircraftElement.textContent = `AIRCRAFT: ${aircraftAirborne}/${aircraftLanded}`;
     }
   }
 

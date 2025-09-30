@@ -389,24 +389,21 @@ export class RadarScene {
     const elapsedMs = this.startTimestamp === null ? 0 : timestamp - this.startTimestamp;
 
     if (this.hud) {
+      const aircraftAirborne = this.trafficManager.aircraft.length;
+      const aircraftLanded = this.gameState.metrics.flightsHandled;
+      
       this.hud.update({
         score: this.gameState.metrics.score,
         stage: this.currentStage,
         elapsedMs,
         activeRunway: this.activeRunway,
-        aircraftSpawned: this.trafficManager.aircraftSpawned,
-        aircraftTotal: this.trafficManager.stageAircraftLimit,
+        aircraftAirborne,
+        aircraftLanded,
       });
     }
 
     if (this.controlPanel) {
       this.controlPanel.update({
-        difficulty: this.gameState.getDifficulty(),
-        playerSlots: {
-          used: this.playerManager.listPlayers().length,
-          max: this.playerManager.getMaxPlayers(),
-        },
-        activeFlights: this.gameState.getActiveFlights(),
         topScores: this.scoreboard.getTopScores(),
       });
     }
