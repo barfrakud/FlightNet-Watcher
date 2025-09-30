@@ -187,10 +187,6 @@ export class RadarScene {
     const centerY = height / 2;
     const maxRadius = Math.min(centerX, centerY);
 
-    if (this.runwayVisible) {
-      this._drawRunway(ctx, centerX, centerY, maxRadius);
-    }
-
     ctx.strokeStyle = '#003300';
     for (let i = 1; i <= 5; i += 1) {
       ctx.beginPath();
@@ -203,6 +199,10 @@ export class RadarScene {
     ctx.moveTo(centerX, centerY - maxRadius);
     ctx.lineTo(centerX, centerY + maxRadius);
     ctx.stroke();
+
+    if (this.runwayVisible) {
+      this._drawRunway(ctx, centerX, centerY, maxRadius);
+    }
   }
 
   _updateRunwayDefinition() {
@@ -235,37 +235,51 @@ export class RadarScene {
     ctx.lineWidth = 2;
     ctx.strokeRect(left, top, runwayLength, runwayWidth);
 
-    const centerLineSegments = 9;
-    const segmentLength = runwayLength / (centerLineSegments * 2);
+    const midY = this.runway.centerY;
+    const dashedLineStart = left + 90;
+    const dashedLineEnd = left + runwayLength - 90;
+    const dashedLineLength = dashedLineEnd - dashedLineStart;
+    const centerLineSegments = 8;
+    const segmentLength = dashedLineLength / (centerLineSegments * 2);
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
     ctx.lineWidth = 3;
     ctx.setLineDash([segmentLength, segmentLength]);
     ctx.beginPath();
-    const midY = this.runway.centerY;
-    ctx.moveTo(left, midY);
-    ctx.lineTo(left + runwayLength, midY);
+    ctx.moveTo(dashedLineStart, midY);
+    ctx.lineTo(dashedLineEnd, midY);
     ctx.stroke();
     ctx.setLineDash([]);
 
-    const landingPointX = left + runwayLength / 3;
-    ctx.strokeStyle = 'rgba(255, 255, 0, 0.8)';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(landingPointX, top);
-    ctx.lineTo(landingPointX, top + runwayWidth);
-    ctx.stroke();
-
     ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-    ctx.font = 'bold 24px Courier New';
+    ctx.font = 'bold 32px Courier New';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
+    
+    ctx.save();
     if (this.activeRunway === '27') {
-      ctx.fillText('27', left + 40, midY);
-      ctx.fillText('09', left + runwayLength - 40, midY);
+      ctx.translate(left + 50, midY);
+      ctx.rotate(Math.PI / 2);
+      ctx.fillText('09', 0, 0);
+      ctx.restore();
+      
+      ctx.save();
+      ctx.translate(left + runwayLength - 50, midY);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText('27', 0, 0);
+      ctx.restore();
     } else {
-      ctx.fillText('09', left + 40, midY);
-      ctx.fillText('27', left + runwayLength - 40, midY);
+      ctx.translate(left + 50, midY);
+      ctx.rotate(Math.PI / 2);
+      ctx.fillText('27', 0, 0);
+      ctx.restore();
+      
+      ctx.save();
+      ctx.translate(left + runwayLength - 50, midY);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText('09', 0, 0);
+      ctx.restore();
     }
+    
     ctx.textAlign = 'left';
     ctx.textBaseline = 'alphabetic';
   }
